@@ -1,21 +1,8 @@
-/*
-
-  (The MIT License)
-
-  Copyright (C) 2005-2013 Kai Davenport
-
-  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the 'Software'), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-
-  The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-
-  THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
- */
-import fs from 'node-fs'
+import fs from 'fs'
 import inquirer from 'inquirer'
 import path from 'path'
 
-export const conflictResolvers = {
+const conflictResolvers = {
   ask: 'ask',
   skip: 'skip',
   overwrite: 'overwrite'
@@ -46,16 +33,16 @@ function conflictQuestionFactory (f1, f2) {
 }
 
 function saveRenamedFile (src, dest) {
-  return (answer) => {
-    const newName = answer.fileName
+  return ({fileName}) => {
+    const newName = fileName
     const newDest = dest.split(path.sep).slice(0, -1).join(path.sep) + path.sep + newName
     copyFile(newDest, src)
-  }
+  };
 }
 
 function resolveConflict (src, dest) {
-  return (answer) => {
-    switch (answer.resolution) {
+  return ({resolution}) => {
+    switch (resolution) {
       case 'overwrite':
         copyFile(src, dest)
         break
@@ -65,15 +52,15 @@ function resolveConflict (src, dest) {
       default:
 
     }
-  }
+  };
 }
 
 function fileAsk (src, dest) {
-  var question = conflictQuestionFactory(src, dest)
+  const question = conflictQuestionFactory(src, dest);
   inquirer.prompt([question], resolveConflict(src, dest))
 }
 
-export default function mergeDirs (src, dest, conflictResolver = conflictResolvers.skip) {
+function mergeDirs (src, dest, conflictResolver = conflictResolvers.skip) {
   // handle false, for backward compatability
   if (conflictResolver === false) {
     conflictResolver = conflictResolvers.skip
@@ -83,8 +70,8 @@ export default function mergeDirs (src, dest, conflictResolver = conflictResolve
   const files = fs.readdirSync(src)
 
   files.forEach((file) => {
-    const srcFile = '' + src + '/' + file
-    const destFile = '' + dest + '/' + file
+    const srcFile = `${src}/${file}`
+    const destFile = `${dest}/${file}`
     const stats = fs.lstatSync(srcFile)
 
     if (stats.isDirectory()) {
@@ -108,3 +95,4 @@ export default function mergeDirs (src, dest, conflictResolver = conflictResolve
     }
   })
 }
+export {mergeDirs as default, conflictResolvers}
