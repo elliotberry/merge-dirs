@@ -1,4 +1,4 @@
-merge-dirs
+merge-directories
 ==========
 
 node module to synchronously and recursively merge files from one folder to another
